@@ -8,6 +8,8 @@ import drawRouter from "./routes/drawRouter.js";
 import charityRouter from "./routes/charityRouter.js";
 import winnerRouter from "./routes/winnerRouter.js";
 import adminRouter from "./routes/adminRouter.js";
+import subscriptionRouter from "./routes/subscriptionRouter.js";
+import { handleStripeWebhook } from "./controllers/subscriptionController.js";
 
 import dotenv from 'dotenv';
 
@@ -18,8 +20,18 @@ const app = express();
 
 
 app.use(morgan("dev"));
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://golf-dh-shyam.vercel.app"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true
+  })
+);
 
+app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), handleStripeWebhook);
 
 app.use(express.json());
 
@@ -29,6 +41,7 @@ app.use("/draws", drawRouter);
 app.use("/charities", charityRouter);
 app.use("/winners", winnerRouter);
 app.use("/admin", adminRouter);
+app.use("/api/subscriptions", subscriptionRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello World!");

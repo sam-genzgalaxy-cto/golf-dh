@@ -1,4 +1,5 @@
 import { query } from '../services/database.js';
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -31,9 +32,9 @@ export const adminMiddleware = (req, res, next) => {
     next();
 };
 
-export const subsMiddleware = (req, res, next) => {
-    const sub = query('SELECT sub_status FROM users WHERE id = $1', [req.user.userId]);
-    if (sub.rows[0].sub_status !== 'active') {
+export const subsMiddleware = async (req, res, next) => {
+    const sub = await query('SELECT status FROM subscriptions WHERE user_id = $1 ORDER BY id DESC LIMIT 1', [req.user.userId]);
+    if (sub.rows.length === 0 || sub.rows[0].status !== 'active') {
         return res.status(403).json({ message: "Active subscription required." });
     }
     next();

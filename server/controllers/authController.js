@@ -30,10 +30,12 @@ export const registerUser = async (req, res) => {
 };
 
 export const loginUser = async (req, res) => {
+    try{
     const { email, password } = req.body;
     if(!email || !password){
         return res.status(400).json({ message: "Email and password are required." });
     }
+    console.log("Env is present:", process.env.PG_SUPABASE_STRING);
     const user = await query('SELECT * FROM users WHERE email = $1', [email]);
     if(user.rows.length === 0){
         return res.status(400).json({ message: "Invalid credentials." });
@@ -44,6 +46,10 @@ export const loginUser = async (req, res) => {
     }
     const token = jwt.sign({ userId: user.rows[0].id,role:user.rows[0].role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
+} catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error.", error: err.message });
+}
 };
 
 export const getUserProfile = async (req, res) => {
